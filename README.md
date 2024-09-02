@@ -50,7 +50,7 @@ To get started with Free RAG PDF, follow these steps:
 4. **Run the Application**:
    Launch the Gradio interface:
    ```bash
-   python main.py
+   python app.py
    ```
 
 ## Usage
