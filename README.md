@@ -60,6 +60,8 @@ To get started with Free RAG PDF, follow these steps:
 1. Open the Gradio interface in your browser.
 2. Enter your API keys for Llama Cloud, Groq, Google, and Pinecone.
 3. Click the **Initialize System** button to set up the system with your API keys.
+   
+![rag1](https://github.com/user-attachments/assets/c1307d9a-30bf-45b1-916f-1c97ff7414bd)
 
 ### Uploading and Ingesting Documents
 
@@ -71,6 +73,7 @@ To get started with Free RAG PDF, follow these steps:
 1. Enter your query in the **Query** textbox.
 2. Click **Submit Query** to retrieve relevant information from the ingested documents.
 3. View the response in the **Query Output** textbox.
+![rag2](https://github.com/user-attachments/assets/bf0bb5ef-d8eb-4d70-9f51-1b3825ee3c8e)
 
 ### Copying Responses
 
