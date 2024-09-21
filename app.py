@@ -1,109 +1,61 @@
-import gradio as gr
-import os
-import nest_asyncio
-from dotenv import load_dotenv
-from langchain.llms import Groq
-from langchain.embeddings import GeminiEmbedding
-from llama_index.core import Settings, SimpleDirectoryReader
-from llama_index.vector_stores.pinecone import PineconeVectorStore
-from llama_index.core.retrievers import VectorIndexRetriever
-from llama_index.core.query_engine import RetrieverQueryEngine
-from pinecone import Pinecone
-from llama_parse import LlamaParse
+import streamlit as st
+from backend import process_pdf, query_rag
 
-nest_asyncio.apply()
+st.set_page_config(page_title="PDF QA Bot", layout="wide")
 
-# Function to set API keys and initialize components
-def initialize_system(llama_cloud_api_key, groq_api_key, google_api_key, pinecone_api_key):
-    # Save API keys to environment variables
-    os.environ['LLAMA_CLOUD_API_KEY'] = llama_cloud_api_key
-    os.environ['GROQ_API_KEY'] = groq_api_key
-    os.environ['GOOGLE_API_KEY'] = google_api_key
-    os.environ['PINECONE_API_KEY'] = pinecone_api_key
-    
-    # Initialize components with the provided API keys
-    llm = Groq(model="llama-3.1-70b-versatile", api_key=groq_api_key)
-    embedding_model = GeminiEmbedding(model="models/embedding-001", api_key=google_api_key)
-    
-    Settings.llm = llm
-    Settings.embed_model = embedding_model
-    Settings.chunk_size = 1024
-    
-    pinecone_client = Pinecone(api_key=pinecone_api_key)
-    pinecone_index = pinecone_client.Index('project-1')
-    vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
-    
-    return "System initialized successfully!"
+# Custom CSS to enhance the interface
+st.markdown("""
+<style>
+    .main {
+        padding: 2rem;
+    }
+    .stButton>button {
+        width: 100%;
+    }
+    .stTextInput>div>div>input {
+        background-color: #f0f2f6;
+    }
+    .st-emotion-cache-1v0mbdj {
+        width: 100%;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# Function to ingest the uploaded document
-def ingest_document(file):
-    parser = LlamaParse(api_key=os.getenv("LLAMA_CLOUD_API_KEY"), result_type="markdown", verbose=True)
-    file_extractor = {".pdf": parser}
-    
-    # Assuming the document is uploaded to a temporary file
-    documents = SimpleDirectoryReader(file.name, file_extractor=file_extractor).load_data()
-    
-    pipeline = IngestionPipeline(
-        transformations=[
-            SentenceSplitter(chunk_size=1024, chunk_overlap=25),
-            embedding_model
-        ],
-        vector_store=vector_store
-    )
-    pipeline.run(documents=documents)
-    
-    return "Document ingested successfully!"
+st.title("📚 PDF Question Answering Bot")
 
-# Function to query the document
-def query_document(query):
-    response = query_engine.query(query)
-    return response
+# Initialize session state
+if 'vectorstore' not in st.session_state:
+    st.session_state.vectorstore = None
+if 'file_processed' not in st.session_state:
+    st.session_state.file_processed = False
 
-# Gradio interface
-with gr.Blocks() as interface:
-    gr.Markdown("# Free RAG_PDF Interface")
-    
-    with gr.Row():
-        llama_cloud_api_key = gr.Textbox(label="Llama Cloud API Key", type="password")
-        groq_api_key = gr.Textbox(label="Groq API Key", type="password")
-        google_api_key = gr.Textbox(label="Google API Key", type="password")
-        pinecone_api_key = gr.Textbox(label="Pinecone API Key", type="password")
-    
-    initialize_button = gr.Button("Initialize System")
-    
-    initialize_output = gr.Textbox(label="Initialization Output", interactive=False)
-    
-    with gr.Row():
-        file_upload = gr.File(label="Upload PDF/CSV Document", file_types=["pdf", "csv"])
-        ingest_button = gr.Button("Ingest Document")
-    
-    ingest_output = gr.Textbox(label="Ingestion Output", interactive=False)
-    
-    with gr.Row():
-        query_input = gr.Textbox(label="Query", placeholder="Ask a question about the document...")
-        query_button = gr.Button("Submit Query")
-    
-    query_output = gr.Textbox(label="Query Output", interactive=False)
-    copy_button = gr.Button("Copy Response")
-    
-    # Link the initialize button to the initialization function
-    initialize_button.click(fn=initialize_system, 
-                            inputs=[llama_cloud_api_key, groq_api_key, google_api_key, pinecone_api_key], 
-                            outputs=initialize_output)
-    
-    # Link the ingest button to the document ingestion function
-    ingest_button.click(fn=ingest_document, inputs=file_upload, outputs=ingest_output)
-    
-    # Link the query button to the query function
-    query_button.click(fn=query_document, inputs=query_input, outputs=query_output)
-    
-    # Copy button functionality
-    def copy_to_clipboard(text):
-        import pyperclip
-        pyperclip.copy(text)
-        return "Copied to clipboard!"
-    
-    copy_button.click(fn=copy_to_clipboard, inputs=query_output, outputs=gr.Textbox(label="Copy Status", interactive=False))
+# Create two columns
+col1, col2 = st.columns([1, 1], gap="large")
 
-# Launch the Gradio interface
-interface.launch()
+with col1:
+    st.header("📄 Upload PDF")
+    uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+    
+    if uploaded_file is not None:
+        if st.button("Process PDF"):
+            with st.spinner("Processing PDF..."):
+                st.session_state.vectorstore = process_pdf(uploaded_file)
+                st.session_state.file_processed = True
+            st.success("PDF processed successfully!")
+
+with col2:
+    st.header("❓ Ask a Question")
+    user_question = st.text_input("Enter your question about the PDF content:")
+    
+    if user_question and st.session_state.file_processed:
+        if st.button("Get Answer"):
+            with st.spinner("Generating answer..."):
+                answer = query_rag(user_question, st.session_state.vectorstore)
+            st.subheader("Answer:")
+            st.write(answer)
+    elif not st.session_state.file_processed:
+        st.info("Please upload and process a PDF before asking questions.")
+
+# Add a footer
+st.markdown("---")
+st.markdown("Made with ❤️ by Rkan")
