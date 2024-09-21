@@ -1,33 +1,30 @@
 
 # RAG_free
 
-Free RAG  is a Retrieval-Augmented Generation (RAG) system designed to process and query PDF and CSV documents using free APIs "(free tiers)" like Groq , Pinecone, and Gemini. The system provides a web-based interface where users can upload documents, initialize the system with their API keys, and interact with the documents through natural language queries.
-
+This project is a Retrieval-Augmented Generation (RAG) system, designed to process documents (PDF format), store document embeddings in a Pinecone vector store, and retrieve contextually relevant information using Groq's Llama-3 model for generating answers.
 ## Table of Contents
 
 - [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Initializing the System](#initializing-the-system)
   - [Uploading and Ingesting Documents](#uploading-and-ingesting-documents)
   - [Querying the Documents](#querying-the-documents)
-  - [Copying Responses](#copying-responses)
 - [Environment Variables](#environment-variables)
 - [APIs Used](#apis-used)
 - [Contributing](#contributing)
+![ragger](https://github.com/user-attachments/assets/9761074d-e449-4dbf-b9b3-96e29465926a)
 
 
 ## Introduction
 
-Free RAG_PDF leverages state-of-the-art language models and vector stores to make it easy to query and retrieve relevant information from your documents. The interface is built using Gradio, providing a user-friendly way to interact with the system without needing to dive into the code.
+Free RAG_PDF leverages state-of-the-art language models and vector stores to make it easy to query and retrieve relevant information from your documents. The interface is built using Streamlit, providing a user-friendly way to interact with the system without needing to dive into the code.
 
 ## Features
 
-- **API Integration**: Easily integrate with Groq, Pinecone, and Gemini APIs for document processing and query handling.
-- **Document Ingestion**: Upload and ingest PDF or CSV documents for processing.
-- **Query System**: Query the ingested documents and retrieve relevant content.
-- **Copy Response**: Quickly copy the query response to your clipboard for easy sharing.
+-PDF Document Processing: Load and split PDF files into chunks.
+-Pinecone Vector Store: Store embeddings of the document texts using the sentence-transformers/all-MiniLM-L6-v2 model.
+-Retrieval-Augmented Generation (RAG): Retrieve relevant document chunks based on a query and generate an answer using Groq's LLM.
 
 ## Installation
 
@@ -50,23 +47,18 @@ To get started with Free RAG PDF, follow these steps:
 4. **Run the Application**:
    Launch the Gradio interface:
    ```bash
-   python app.py
+   streamlit run app.py
    ```
 
 ## Usage
 
-### Initializing the System
 
-1. Open the Gradio interface in your browser.
-2. Enter your API keys for Llama Cloud, Groq, Google, and Pinecone.
-3. Click the **Initialize System** button to set up the system with your API keys.
-   
-![rag1](https://github.com/user-attachments/assets/c1307d9a-30bf-45b1-916f-1c97ff7414bd)
+
 
 ### Uploading and Ingesting Documents
 
 1. Use the **Upload PDF/CSV Document** button to select a file from your computer.
-2. Click **Ingest Document** to process and store the document's content in the vector store.
+2. Click **Process PDF Document** to process and store the document's content in the vector store(pinecone).
 
 ### Querying the Documents
 
@@ -84,26 +76,23 @@ To get started with Free RAG PDF, follow these steps:
 
 You'll need to set the following environment variables in a `.env` file:
 
-- `LLAMA_CLOUD_API_KEY`: Your API key for LlamaParse.
 - `GROQ_API_KEY`: Your API key for Groq.
-- `GOOGLE_API_KEY`: Your API key for GeminiEmbedding.
+- sentence-transformers/all-MiniLM-L6-v2 for embedding documents 
 - `PINECONE_API_KEY`: Your API key for Pinecone.
 
 ### Example `.env` file:
 ```env
-LLAMA_CLOUD_API_KEY=your-llama-cloud-api-key
+
 GROQ_API_KEY=your-groq-api-key
-GOOGLE_API_KEY=your-google-api-key
 PINECONE_API_KEY=your-pinecone-api-key
 ```
 
 ## APIs Used
 
-- **LlamaParse**: For parsing PDF documents into Markdown format.
 - **Groq**: Language model used for text processing and understanding.
-- **GeminiEmbedding**: Generates embeddings for text chunks.
-- **Pinecone**: Vector store for storing and retrieving document embeddings.
 
+- **Pinecone**: Vector store for storing and retrieving document embeddings.
+U can use jina ai for embedding !!! and provide their API_KEY
 ## Contributing
 
 Contributions are welcome! Please fork the repository and create a pull request with your changes. Feel free to open issues for any bugs or feature requests.
